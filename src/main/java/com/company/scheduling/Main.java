@@ -1,17 +1,45 @@
 package com.company.scheduling;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import java.util.*;
+
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+        ScheduleManager manager = new ScheduleManager();
+
+        List<Employee> employees = Arrays.asList(
+                new Employee("John"),
+                new Employee("Mary"),
+                new Employee("Peter"),
+                new Employee("Sarah"),
+                new Employee("Mike"),
+                new Employee("Lisa"),
+                new Employee("David"),
+                new Employee("Emma")
+        );
+
+        for (Employee emp : employees) {
+            addEmployeePreferences(emp);
+            manager.addEmployee(emp);
+        }
+
+        // Generate and print schedule
+        manager.generateSchedule();
+        manager.printSchedule();
+    }
+
+    private static void addEmployeePreferences(Employee emp) {
+        Random rand = new Random();
+        List<String> days = Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
+        List<String> shifts = Arrays.asList("Morning", "Afternoon", "Evening");
+
+        // Ensure each employee has preferences for at least 5 days
+        for (String day : days) {
+            // Add all shifts with different priorities
+            int priority = 3;
+            for (String shift : shifts) {
+                emp.addPreference(day, shift, priority--);
+            }
         }
     }
 }
