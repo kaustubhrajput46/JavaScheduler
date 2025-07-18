@@ -1,17 +1,47 @@
 package com.company.scheduling;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import java.util.*;
+
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+        ScheduleManager manager = new ScheduleManager();
+
+        Employee john = new Employee("John");
+        Employee mary = new Employee("Mary");
+        Employee peter = new Employee("Peter");
+        Employee sarah = new Employee("Sarah");
+
+        addEmployeePreferences(john);
+        addEmployeePreferences(mary);
+        addEmployeePreferences(peter);
+        addEmployeePreferences(sarah);
+
+        manager.addEmployee(john);
+        manager.addEmployee(mary);
+        manager.addEmployee(peter);
+        manager.addEmployee(sarah);
+
+        // Generate and print schedule
+        manager.generateSchedule();
+        manager.printSchedule();
+    }
+
+    private static void addEmployeePreferences(Employee emp) {
+        Random rand = new Random();
+        List<String> days = Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
+        List<String> shifts = Arrays.asList("Morning", "Afternoon", "Evening");
+
+        for (String day : days) {
+            // Randomly assign 1-3 preferences for each day
+            int numPrefs = rand.nextInt(3) + 1;
+            List<String> availableShifts = new ArrayList<>(shifts);
+            Collections.shuffle(availableShifts);
+
+            for (int i = 0; i < numPrefs; i++) {
+                emp.addPreference(day, availableShifts.get(i), numPrefs - i);
+            }
         }
     }
+
 }

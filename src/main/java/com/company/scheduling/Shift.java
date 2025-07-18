@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Shift {
+    private static final int MIN_EMPLOYEES = 2;
+
     private String day;
     private String type; // "Morning", "Afternoon", "Evening"
     private List<Employee> assignedEmployees;
@@ -15,17 +17,21 @@ public class Shift {
     }
 
     public boolean isFull() {
-        return assignedEmployees.size() >= 2;
+        return assignedEmployees.size() >= MIN_EMPLOYEES;
     }
 
-    public void addEmployee(Employee e) {
-        if (!isFull() && e.getAssignedDays() < 5) {
+    public boolean hasMinimumStaff() {
+        return assignedEmployees.size() >= MIN_EMPLOYEES;
+    }
+
+    public boolean addEmployee(Employee e) {
+        if (e.canWork(day)) {
             assignedEmployees.add(e);
-            e.incrementAssignedDays();
+            e.assignToDay(day);
+            return true;
         }
+        return false;
     }
-
-    // Getter methods
 
     public String getDay() {
         return day;
@@ -36,6 +42,10 @@ public class Shift {
     }
 
     public List<Employee> getAssignedEmployees() {
-        return assignedEmployees;
+        return new ArrayList<>(assignedEmployees);
+    }
+
+    public int getCurrentStaffCount() {
+        return assignedEmployees.size();
     }
 }
