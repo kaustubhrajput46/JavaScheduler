@@ -1,9 +1,8 @@
+
 package com.company.scheduling;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ScheduleManager {
     private static final List<String> DAYS = List.of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
@@ -33,58 +32,63 @@ public class ScheduleManager {
     }
 
     public void generateSchedule() {
-        assignPreferredShifts();
-        resolveConflicts();
-        ensureMinimumStaffing();
+        // Reset all assignments
+        resetEmployeeAssignments();
+
+        // Use a more balanced approach
+        assignEmployeesBalanced();
+
+        // Fill any remaining understaffed shifts
+        fillUnderstaffedShifts();
     }
 
+    private void resetEmployeeAssignments() {
+        for (Employee emp : employees) {
+            emp.reset(); // We need to add this method to Employee class
+        }
+    }
 
+    private void assignEmployeesBalanced() {
+        // Create a list of all shifts that need staffing
+        List<ShiftSlot> allShifts = new ArrayList<>();
 
-    private void assignPreferredShifts() {
         for (String day : DAYS) {
-            Map<String, Shift> shifts = weekSchedule.get(day);
-            for (Employee emp : employees) {
-                if (!emp.canWork(day)) continue;
+            for (String shiftType : SHIFT_TYPES) {
+                Shift shift = weekSchedule.get(day).get(shiftType);
+                // Each shift needs 2 employees, so create 2 slots
+                allShifts.add(new ShiftSlot(day, shiftType, shift, 1));
+                allShifts.add(new ShiftSlot(day, shiftType, shift, 2));
+            }
+        }
 
-                Map<String, Integer> prefs = emp.getPreferencesForDay(day);
-                if (prefs.isEmpty()) continue;
+        // Shuffle to randomize assignment order
+        Collections.shuffle(allShifts);
 
-                // Sort preferences by priority
-                List<Map.Entry<String, Integer>> sortedPrefs = new ArrayList<>(prefs.entrySet());
-                sortedPrefs.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
+        // Sort employees by current workload (ascending)
+        for (ShiftSlot slot : allShifts) {
+            List<Employee> availableEmployees = employees.stream()
+                    .filter(emp -> emp.canWork(slot.day))
+                    .filter(emp -> emp.getAssignedDays() < 5)
+                    .sorted(Comparator.comparingInt(Employee::getAssignedDays))
+                    .collect(Collectors.toList());
 
-                for (Map.Entry<String, Integer> pref : sortedPrefs) {
-                    Shift shift = shifts.get(pref.getKey());
-                    if (!shift.isFull()) {
-                        shift.addEmployee(emp);
-                        break;
-                    }
+            if (!availableEmployees.isEmpty()) {
+                Employee selected = selectBestEmployee(availableEmployees, slot);
+                if (selected != null) {
+                    slot.shift.addEmployee(selected);
                 }
             }
         }
     }
 
-    private void resolveConflicts() {
-        for (String day : DAYS) {
-            Map<String, Shift> shifts = weekSchedule.get(day);
-            for (Employee emp : employees) {
-                if (emp.canWork(day)) {
-                    handleShiftConflict(emp, day, shifts);
-                }
-            }
-        }
+    private Employee selectBestEmployee(List<Employee> candidates, ShiftSlot slot) {
+        // Prefer employees with fewer assigned days
+        return candidates.stream()
+                .min(Comparator.comparingInt(Employee::getAssignedDays))
+                .orElse(null);
     }
 
-    private void handleShiftConflict(Employee emp, String day, Map<String, Shift> shifts) {
-        for (String shiftType : SHIFT_TYPES) {
-            Shift shift = shifts.get(shiftType);
-            if (!shift.isFull() && shift.addEmployee(emp)) {
-                return;
-            }
-        }
-    }
-
-    private void ensureMinimumStaffing() {
+    private void fillUnderstaffedShifts() {
         for (String day : DAYS) {
             for (String shiftType : SHIFT_TYPES) {
                 Shift shift = weekSchedule.get(day).get(shiftType);
@@ -103,11 +107,13 @@ public class ScheduleManager {
     private Employee findAvailableEmployee(String day) {
         return employees.stream()
                 .filter(emp -> emp.canWork(day))
-                .findFirst()
+                .filter(emp -> emp.getAssignedDays() < 5)
+                .min(Comparator.comparingInt(Employee::getAssignedDays))
                 .orElse(null);
     }
 
     public void printSchedule() {
+        System.out.println("\n=== WEEKLY SCHEDULE ===");
         for (String day : DAYS) {
             System.out.println("\n=== " + day + " ===");
             Map<String, Shift> shifts = weekSchedule.get(day);
@@ -119,9 +125,34 @@ public class ScheduleManager {
                     System.out.println("No employees assigned");
                 } else {
                     employees.forEach(e -> System.out.print(e.getName() + " "));
-                    System.out.println();
+                    System.out.println(" (" + employees.size() + " employees)");
                 }
             }
+        }
+
+        // Print employee workload summary
+        printWorkloadSummary();
+    }
+
+    private void printWorkloadSummary() {
+        System.out.println("\n=== EMPLOYEE WORKLOAD SUMMARY ===");
+        for (Employee emp : employees) {
+            System.out.println(emp.getName() + ": " + emp.getAssignedDays() + " days assigned");
+        }
+    }
+
+    // Helper class for shift assignment
+    private static class ShiftSlot {
+        String day;
+        String shiftType;
+        Shift shift;
+        int slotNumber;
+
+        ShiftSlot(String day, String shiftType, Shift shift, int slotNumber) {
+            this.day = day;
+            this.shiftType = shiftType;
+            this.shift = shift;
+            this.slotNumber = slotNumber;
         }
     }
 }

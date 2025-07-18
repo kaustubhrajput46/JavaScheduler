@@ -32,6 +32,11 @@ public class Employee {
         assignedDays++;
     }
 
+    public void reset() {
+        assignedShiftDays.clear();
+        assignedDays = 0;
+    }
+
     public Map<String, Integer> getPreferencesForDay(String day) {
         return shiftPriorities.getOrDefault(day, new HashMap<>());
     }

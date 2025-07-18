@@ -7,20 +7,21 @@ public class Main {
 
         ScheduleManager manager = new ScheduleManager();
 
-        Employee john = new Employee("John");
-        Employee mary = new Employee("Mary");
-        Employee peter = new Employee("Peter");
-        Employee sarah = new Employee("Sarah");
+        List<Employee> employees = Arrays.asList(
+                new Employee("John"),
+                new Employee("Mary"),
+                new Employee("Peter"),
+                new Employee("Sarah"),
+                new Employee("Mike"),
+                new Employee("Lisa"),
+                new Employee("David"),
+                new Employee("Emma")
+        );
 
-        addEmployeePreferences(john);
-        addEmployeePreferences(mary);
-        addEmployeePreferences(peter);
-        addEmployeePreferences(sarah);
-
-        manager.addEmployee(john);
-        manager.addEmployee(mary);
-        manager.addEmployee(peter);
-        manager.addEmployee(sarah);
+        for (Employee emp : employees) {
+            addEmployeePreferences(emp);
+            manager.addEmployee(emp);
+        }
 
         // Generate and print schedule
         manager.generateSchedule();
@@ -32,16 +33,13 @@ public class Main {
         List<String> days = Arrays.asList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
         List<String> shifts = Arrays.asList("Morning", "Afternoon", "Evening");
 
+        // Ensure each employee has preferences for at least 5 days
         for (String day : days) {
-            // Randomly assign 1-3 preferences for each day
-            int numPrefs = rand.nextInt(3) + 1;
-            List<String> availableShifts = new ArrayList<>(shifts);
-            Collections.shuffle(availableShifts);
-
-            for (int i = 0; i < numPrefs; i++) {
-                emp.addPreference(day, availableShifts.get(i), numPrefs - i);
+            // Add all shifts with different priorities
+            int priority = 3;
+            for (String shift : shifts) {
+                emp.addPreference(day, shift, priority--);
             }
         }
     }
-
 }
